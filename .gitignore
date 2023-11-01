@@ -19,3 +19,5 @@ Cargo.lock
 /target
 
 chat_gpt_venv/
+
+*.so.*

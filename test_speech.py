@@ -8,12 +8,12 @@ from playsound import playsound
 import os
 import openai
 import io
+from tempfile import NamedTemporaryFile
 
 SAMPLERATE = 44100
-SPEAKER_ID = 2
+SPEAKER_ID = 3
 
-open_jtalk_dict_dir = './open_jtalk_dic_utf_8-1.11'
-out = Path('output.wav')
+open_jtalk_dict_dir = '../open_jtalk_dic_utf_8-1.11'
 acceleration_mode = AccelerationMode.AUTO
 
 def callback(in_data, frame_count, time_info, status):
@@ -42,9 +42,9 @@ def callback(in_data, frame_count, time_info, status):
         print(response)
         audio_query = core.audio_query(response, SPEAKER_ID)
         wav = core.synthesis(audio_query, SPEAKER_ID)
-        out.write_bytes(wav)
-        # f = io.BytesIO(wav)
-        playsound(out)
+        with NamedTemporaryFile() as fd:
+            fd.write(wav)
+            playsound(fd.name)
 
     except speech_recognition.UnknownValueError:
         pass
