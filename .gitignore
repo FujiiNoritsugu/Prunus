@@ -21,3 +21,5 @@ Cargo.lock
 chat_gpt_venv/
 
 *.so.*
+
+bin/
