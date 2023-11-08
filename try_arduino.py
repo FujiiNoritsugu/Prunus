@@ -43,7 +43,7 @@ def main():
             },
             {
                 "role": "user",
-                "content": "Arduino UNOでLEDを点灯させるプログラムを生成してください。",
+                "content": "Arduino NANO 33 BLEでLEDを点灯させるプログラムを生成してください。",
             },
         ],
     )
