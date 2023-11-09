@@ -23,3 +23,6 @@ chat_gpt_venv/
 *.so.*
 
 bin/
+
+test_sketch/*.ino
+

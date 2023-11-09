@@ -2,7 +2,7 @@ import os
 import openai
 
 import re
-
+import subprocess
 
 def extract_code(text):
     # プログラムコードの正規表現パターン
@@ -27,7 +27,8 @@ def remove_2_byte_characters(input_text):
 
 def main():
     # ファイルを開く
-    with open(os.getenv("OPENAI_API_KEY"), "r") as file:
+    # with open(os.getenv("OPENAI_API_KEY"), "r") as file:
+    with open("../chat_gpt_api_key", "r") as file:
         # ファイルからデータを読み込む
         data = file.read()
 
@@ -43,14 +44,17 @@ def main():
             },
             {
                 "role": "user",
-                "content": "Arduino NANO 33 BLEでLEDを点灯させるプログラムを生成してください。",
+                "content": "Arduino UNO でLEDを1秒毎に点灯させるプログラムを生成してください。",
             },
         ],
     )
 
-    # print(completion.choices[0].message)
-    print(extract_code(completion.choices[0].message.content))
+    # コードをスケッチに書き込む
+    with open('./test_sketch/test_sketch.ino', 'w') as f:
+        f.writelines(extract_code(completion.choices[0].message.content))
 
+    # アップロードシェルを実行する
+    subprocess.run('./upload.sh', shell=True)
 
 if __name__ == "__main__":
     main()

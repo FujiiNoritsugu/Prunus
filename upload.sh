@@ -4,7 +4,7 @@
 ARDUINO_CLI="/home/fujii/Prunus/bin/arduino-cli"
 
 # ArduinoボードのFQBN（Fully Qualified Board Name）を設定
-BOARD_FQBN="arduino:mbed:nano33ble"
+BOARD_FQBN="arduino:avr:uno"
 
 # シリアルポートの設定（必要に応じて修正）
 SERIAL_PORT="/dev/ttyACM0"
