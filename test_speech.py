@@ -75,7 +75,7 @@ def main():
     stream = audio.open( format = pyaudio.paInt16,
                         rate = SAMPLERATE,
                         channels = 1, 
-                        input_device_index = 17,
+                        input_device_index = 10,
                         input = True, 
                         frames_per_buffer = SAMPLERATE*5, # 5秒周期でコールバック
                         stream_callback=callback)
