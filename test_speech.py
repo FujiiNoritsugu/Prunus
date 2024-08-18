@@ -25,7 +25,7 @@ def callback(in_data, frame_count, time_info, status):
         sprec_text = sprec.recognize_google(audiodata, language='ja-JP')
         print(sprec_text)
         completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o-mini",
             messages=[
                 {
                     "role": "system",
