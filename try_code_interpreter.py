@@ -1,5 +1,8 @@
 from codeinterpreterapi import CodeInterpreterSession, settings
 
+with open("../chat_gpt_api/chat_gpt_api_key", "r") as file:
+    # ファイルからデータを読み込む
+    settings.OPENAI_API_KEY = file.read()
 
 # create a session and close it automatically
 with CodeInterpreterSession() as session:
