@@ -39,7 +39,7 @@ def callback(in_data, frame_count, time_info, status):
 
         operation = f"Arduino UNO で{sprec_text}プログラムを生成してください。"
         completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o-mini",
             messages=[
                 {
                     "role": "system",
