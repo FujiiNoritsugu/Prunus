@@ -13,7 +13,7 @@ from tempfile import NamedTemporaryFile
 SAMPLERATE = 44100
 SPEAKER_ID = 3
 
-open_jtalk_dict_dir = '../open_jtalk_dic_utf_8-1.11'
+open_jtalk_dict_dir = './voicevox_core/open_jtalk_dic_utf_8-1.11'
 acceleration_mode = AccelerationMode.AUTO
 
 def callback(in_data, frame_count, time_info, status):
@@ -75,7 +75,7 @@ def main():
     stream = audio.open( format = pyaudio.paInt16,
                         rate = SAMPLERATE,
                         channels = 1, 
-                        input_device_index = 10,
+                        input_device_index = 8,
                         input = True, 
                         frames_per_buffer = SAMPLERATE*5, # 5秒周期でコールバック
                         stream_callback=callback)
