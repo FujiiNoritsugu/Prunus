@@ -6,12 +6,12 @@ import voicevox_core
 from voicevox_core import AccelerationMode, AudioQuery, VoicevoxCore
 from playsound import playsound
 import os
-import openai
+from openai import OpenAI
 import io
 from tempfile import NamedTemporaryFile
 
 SAMPLERATE = 44100
-SPEAKER_ID = 3
+SPEAKER_ID = 0
 
 open_jtalk_dict_dir = './voicevox_core/open_jtalk_dic_utf_8-1.11'
 acceleration_mode = AccelerationMode.AUTO
@@ -19,12 +19,13 @@ acceleration_mode = AccelerationMode.AUTO
 def callback(in_data, frame_count, time_info, status):
     global sprec
     global core
-
+    global openai_client
     try:
         audiodata = speech_recognition.AudioData(in_data,SAMPLERATE,2)
         sprec_text = sprec.recognize_google(audiodata, language='ja-JP')
         print(sprec_text)
-        completion = openai.ChatCompletion.create(
+
+        completion = openai_client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {
@@ -39,6 +40,7 @@ def callback(in_data, frame_count, time_info, status):
         )
 
         response = completion.choices[0].message.content
+        response = "アレクサ、" + response
         print(response)
         audio_query = core.audio_query(response, SPEAKER_ID)
         wav = core.synthesis(audio_query, SPEAKER_ID)
@@ -50,6 +52,8 @@ def callback(in_data, frame_count, time_info, status):
         pass
     except speech_recognition.RequestError as e:
         pass
+    except Exception as e:
+        print(f"Error occurred: {e}")  # これでOpenAIのエラーもキャッチ
     finally:
         return (None, pyaudio.paContinue)
     
@@ -59,8 +63,8 @@ def main():
         # ファイルからデータを読み込む
         data = file.read()
 
-    # 読み込んだデータを変数に設定
-    openai.api_key = data
+    global openai_client
+    openai_client = OpenAI(api_key=data)
 
     global core
     core = VoicevoxCore(
@@ -75,7 +79,7 @@ def main():
     stream = audio.open( format = pyaudio.paInt16,
                         rate = SAMPLERATE,
                         channels = 1, 
-                        input_device_index = 8,
+                        input_device_index = 21,
                         input = True, 
                         frames_per_buffer = SAMPLERATE*5, # 5秒周期でコールバック
                         stream_callback=callback)
