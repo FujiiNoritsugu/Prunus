@@ -1,0 +1,3 @@
+sudo update-alternatives --config python3
+aplay -l
+pavucontrol
