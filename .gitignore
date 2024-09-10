@@ -24,5 +24,5 @@ chat_gpt_venv/
 
 bin/
 
-test_sketch/*.ino
+test_sketch/**
 
