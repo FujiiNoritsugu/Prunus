@@ -26,3 +26,11 @@ bin/
 
 test_sketch/*.ino
 
+voicevox_core*
+venv/
+
+requirements*
+
+onnxruntime*
+
+download.sh
