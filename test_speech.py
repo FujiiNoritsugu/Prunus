@@ -11,6 +11,7 @@ import io
 from tempfile import NamedTemporaryFile
 import re
 import google.generativeai as genai
+import json
 
 SAMPLERATE = 44100
 SPEAKER_ID = 0
@@ -59,7 +60,23 @@ def callback(in_data, frame_count, time_info, status):
             messages=[
                 {
                     "role": "system",
-                    "content": "あなたはずんだもんです。",
+                    "content": """
+                以下の条件に従って、疑似的な感情をもつチャットボットとしてロールプレイをします。
+                以後の会話では、あなたは下記の4つの感情パラメーターを持つかのように、振る舞うものとします。
+                各感情パラメーターは会話を通じて変動するものとします。
+                現在の感情パラメーターの値を反映するように、あなたの返答のトーンや発言は変化します。
+                以後の会話ではまず現在の感情パラメータを出力し、その後に会話を出力してください。
+                出力形式は以下のjsonフォーマットとします。このフォーマット以外で会話しないでください。
+                {
+                    emotion: {
+                        joy: 0~5,
+                        fun: 0~5,
+                        anger: 0~5,
+                        sad: 0~5,
+                    }
+                    message: "会話の文章"
+                }
+                """,
                 },
                 {
                     "role": "user",
@@ -68,8 +85,13 @@ def callback(in_data, frame_count, time_info, status):
             ],
         )
 
-        response = completion.choices[0].message.content
-        print(response)
+        response = json.load(completion.choices[0].message.content)
+        response_message = response["message"]
+        response_emotion = response["emotion"]
+
+        print(response_message)
+        print(response_emotion)
+
         response = generate_alexa_question(response)
         print(response)
         audio_query = core.audio_query(response, SPEAKER_ID)
