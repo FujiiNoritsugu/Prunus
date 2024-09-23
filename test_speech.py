@@ -88,9 +88,10 @@ def callback(in_data, frame_count, time_info, status):
         response = json.load(completion.choices[0].message.content)
         response_message = response["message"]
         response_emotion = response["emotion"]
+        highest_emotion = max(response_emotion, key=response_emotion.get)
 
         print(response_message)
-        print(response_emotion)
+        print(highest_emotion)
 
         response = generate_alexa_question(response)
         print(response)
