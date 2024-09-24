@@ -85,16 +85,15 @@ def callback(in_data, frame_count, time_info, status):
             ],
         )
 
-        response = json.load(completion.choices[0].message.content)
+        response = json.loads(completion.choices[0].message.content)
         response_message = response["message"]
         response_emotion = response["emotion"]
         highest_emotion = max(response_emotion, key=response_emotion.get)
 
         print(response_message)
         print(highest_emotion)
-
-        response = generate_alexa_question(response)
-        print(response)
+        # response = generate_alexa_question(response_message)
+        # print(response)
         audio_query = core.audio_query(response, SPEAKER_ID)
         wav = core.synthesis(audio_query, SPEAKER_ID)
         with NamedTemporaryFile() as fd:
