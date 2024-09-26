@@ -20,6 +20,8 @@ Cargo.lock
 
 chat_gpt_venv/
 
+emotion_venv/
+
 *.so.*
 
 bin/
