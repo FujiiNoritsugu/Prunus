@@ -12,6 +12,7 @@ from tempfile import NamedTemporaryFile
 import re
 import google.generativeai as genai
 import json
+import httpx
 
 SAMPLERATE = 44100
 SPEAKER_ID = 0
@@ -89,6 +90,11 @@ def callback(in_data, frame_count, time_info, status):
         response_message = response["message"]
         response_emotion = response["emotion"]
         highest_emotion = max(response_emotion, key=response_emotion.get)
+        # 外部サーバにhighest_emotionを送信
+        httpx.post(
+            "http://localhost:8000/change_expression/",
+            json={"emotion": highest_emotion},
+        )
 
         print(response_message)
         print(highest_emotion)
