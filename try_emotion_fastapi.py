@@ -2,6 +2,7 @@ import tkinter as tk
 from fastapi import FastAPI
 import uvicorn
 import threading
+from pydantic import BaseModel
 
 # FastAPIアプリケーションの作成
 app = FastAPI()
@@ -52,10 +53,16 @@ def draw_surprised():
     canvas.create_oval(210, 110, 290, 190, fill="black")
     canvas.create_oval(170, 230, 230, 290, outline="black", width=2)
 
+class EmotionRequest(BaseModel):
+    emotion: str
+
+class EmotionRequest(BaseModel):
+    emotion: str
 
 # FastAPIエンドポイントを定義
 @app.post("/change_expression/")
-def change_expression(emotion: str):
+def change_expression(request: EmotionRequest):
+    emotion = request.emotion
     if emotion == "joy":
         root.after(0, draw_happy)
     elif emotion == "anger":

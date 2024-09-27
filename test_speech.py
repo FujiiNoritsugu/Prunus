@@ -100,7 +100,7 @@ def callback(in_data, frame_count, time_info, status):
         print(highest_emotion)
         # response = generate_alexa_question(response_message)
         # print(response)
-        audio_query = core.audio_query(response, SPEAKER_ID)
+        audio_query = core.audio_query(response_message, SPEAKER_ID)
         wav = core.synthesis(audio_query, SPEAKER_ID)
         with NamedTemporaryFile() as fd:
             fd.write(wav)
