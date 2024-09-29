@@ -13,6 +13,7 @@ import re
 import google.generativeai as genai
 import json
 import httpx
+import traceback
 
 SAMPLERATE = 44100
 SPEAKER_ID = 0
@@ -98,8 +99,8 @@ def callback(in_data, frame_count, time_info, status):
 
         print(response_message)
         print(highest_emotion)
-        # response = generate_alexa_question(response_message)
-        # print(response)
+        response_message = generate_alexa_question(response_message)
+        print(response_message)
         audio_query = core.audio_query(response_message, SPEAKER_ID)
         wav = core.synthesis(audio_query, SPEAKER_ID)
         with NamedTemporaryFile() as fd:
@@ -112,6 +113,7 @@ def callback(in_data, frame_count, time_info, status):
         pass
     except Exception as e:
         print(f"Error occurred: {e}")  # これでOpenAIのエラーもキャッチ
+        traceback.print_exc()
     finally:
         return (None, pyaudio.paContinue)
 
@@ -120,14 +122,14 @@ def main():
     # ファイルを開く
     with open("../chat_gpt_api_key", "r") as file:
         # ファイルからデータを読み込む
-        data = file.read()
+        data = file.read().strip()
 
     global openai_client
     openai_client = OpenAI(api_key=data)
 
     with open("../gemini_api_key", "r") as file:
         # ファイルからデータを読み込む
-        api_key = file.read()
+        api_key = file.read().strip()
 
     genai.configure(api_key=api_key)
     global gemini_model
