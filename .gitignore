@@ -22,6 +22,8 @@ chat_gpt_venv/
 
 emotion_venv/
 
+venv_gemini/
+
 *.so.*
 
 bin/
