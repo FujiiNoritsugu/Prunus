@@ -6,8 +6,8 @@ import google.generativeai as genai
 import json
 import traceback
 import time
+import httpx
 
-SAMPLERATE = 44100
 SPEAKER_ID = 0
 
 open_jtalk_dict_dir = "./voicevox_core/open_jtalk_dic_utf_8-1.11"
@@ -29,7 +29,7 @@ def interact(message):
                     "role": "system",
                     "content": """
                 以下の条件に従って、疑似的な感情をもつチャットボットとしてロールプレイをします。
-                以後の会話では、あなたは下記の4つの感情パラメーターを持つかのように、振る舞うものとします。
+                以後の会話では、あなたは下記の4つの感情パラメーターを持ちかつ相手を挑発するように振る舞うものとします。
                 各感情パラメーターは会話を通じて変動するものとします。
                 現在の感情パラメーターの値を反映するように、あなたの返答のトーンや発言は変化します。
                 以後の会話ではまず現在の感情パラメータを出力し、その後に会話を出力してください。
@@ -56,6 +56,11 @@ def interact(message):
         response_message = response["message"]
         response_emotion = response["emotion"]
         highest_emotion = max(response_emotion, key=response_emotion.get)
+        # 外部サーバにhighest_emotionを送信
+        httpx.post(
+            "http://localhost:8000/change_expression/",
+            json={"emotion": highest_emotion},
+        )
 
         print(response_message)
         print(highest_emotion)
@@ -73,6 +78,11 @@ def interact(message):
         response_message = response["message"]
         response_emotion = response["emotion"]
         highest_emotion = max(response_emotion, key=response_emotion.get)
+        # 外部サーバにhighest_emotionを送信
+        httpx.post(
+            "http://localhost:8001/change_expression/",
+            json={"emotion": highest_emotion},
+        )
 
         print(response_message)
         print(highest_emotion)
@@ -111,7 +121,7 @@ def main():
                 "role": "model",
                 "parts": """
                     以下の条件に従って、疑似的な感情をもつチャットボットとしてロールプレイをします。
-                    以後の会話では、あなたは下記の4つの感情パラメーターを持つかのように、振る舞うものとします。
+                    以後の会話では、あなたは下記の4つの感情パラメーターを持ちかつ相手を挑発するように振る舞うものとします。
                     各感情パラメーターは会話を通じて変動するものとします。
                     現在の感情パラメーターの値を反映するように、あなたの返答のトーンや発言は変化します。
                     以後の会話ではまず現在の感情パラメータを出力し、その後に会話を出力してください。
