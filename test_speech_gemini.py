@@ -9,6 +9,8 @@ import time
 import httpx
 
 SPEAKER_ID = 0
+SPEAKER_ID_CHATGPT = 7
+SPEAKER_ID_GEMINI = 4
 
 open_jtalk_dict_dir = "./voicevox_core/open_jtalk_dic_utf_8-1.11"
 acceleration_mode = AccelerationMode.AUTO
@@ -16,7 +18,8 @@ acceleration_mode = AccelerationMode.AUTO
 
 def interact(message):
 
-    global core
+    global core_chatgpt
+    global core_gemini
     global openai_client
     global gemini_chat
 
@@ -66,8 +69,8 @@ def interact(message):
         print(response_message)
         print(highest_emotion)
 
-        audio_query = core.audio_query(response_message, SPEAKER_ID)
-        wav = core.synthesis(audio_query, SPEAKER_ID)
+        audio_query = core_chatgpt.audio_query(response_message, SPEAKER_ID_CHATGPT)
+        wav = core_chatgpt.synthesis(audio_query, SPEAKER_ID_CHATGPT)
         with NamedTemporaryFile() as fd:
             fd.write(wav)
             playsound(fd.name)
@@ -87,8 +90,8 @@ def interact(message):
         print(response_message)
         print(highest_emotion)
 
-        audio_query = core.audio_query(response_message, SPEAKER_ID)
-        wav = core.synthesis(audio_query, SPEAKER_ID)
+        audio_query = core_gemini.audio_query(response_message, SPEAKER_ID_GEMINI)
+        wav = core_gemini.synthesis(audio_query, SPEAKER_ID_GEMINI)
         with NamedTemporaryFile() as fd:
             fd.write(wav)
             playsound(fd.name)
@@ -121,7 +124,7 @@ def main():
                 "role": "model",
                 "parts": """
                     以下の条件に従って、疑似的な感情をもつチャットボットとしてロールプレイをします。
-                    以後の会話では、あなたは下記の4つの感情パラメーターを持ちかつ相手を挑発するように振る舞うものとします。
+                    以後の会話では、あなたは下記の4つの感情パラメーターを持ちかつ相手をいたわるように振る舞うものとします。
                     各感情パラメーターは会話を通じて変動するものとします。
                     現在の感情パラメーターの値を反映するように、あなたの返答のトーンや発言は変化します。
                     以後の会話ではまず現在の感情パラメータを出力し、その後に会話を出力してください。
@@ -141,12 +144,20 @@ def main():
         ]
     )
 
-    global core
-    core = VoicevoxCore(
+    global core_chatgpt
+    core_chatgpt = VoicevoxCore(
         acceleration_mode=acceleration_mode, open_jtalk_dict_dir=open_jtalk_dict_dir
     )
 
-    core.load_model(SPEAKER_ID)
+    core_chatgpt.load_model(SPEAKER_ID_CHATGPT)
+
+    global core_gemini
+    core_gemini = VoicevoxCore(
+        acceleration_mode=acceleration_mode, open_jtalk_dict_dir=open_jtalk_dict_dir
+    )
+
+    core_gemini.load_model(SPEAKER_ID_GEMINI)
+
     message = "おはよう"
 
     while True:
