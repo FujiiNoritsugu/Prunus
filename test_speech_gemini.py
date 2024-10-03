@@ -35,13 +35,13 @@ def interact(message):
                 以後の会話ではまず現在の感情パラメータを出力し、その後に会話を出力してください。
                 出力形式は以下のjsonフォーマットとします。このフォーマット以外で会話しないでください。
                 {
-                    emotion: {
-                        joy: 0~5,
-                        fun: 0~5,
-                        anger: 0~5,
-                        sad: 0~5,
+                    "emotion": {
+                        "joy": 0~5,
+                        "fun": 0~5,
+                        "anger": 0~5,
+                        "sad": 0~5,
                     }
-                    message: "会話の文章"
+                    "message": "会話の文章"
                 }
                 """,
                 },
@@ -56,6 +56,7 @@ def interact(message):
         response_message = response["message"]
         response_emotion = response["emotion"]
         highest_emotion = max(response_emotion, key=response_emotion.get)
+
         # 外部サーバにhighest_emotionを送信
         httpx.post(
             "http://localhost:8000/change_expression/",
@@ -73,7 +74,6 @@ def interact(message):
 
         response = gemini_chat.send_message(response_message).text
 
-        print(f"gemini respose:{response}")
         response = json.loads(response)
         response_message = response["message"]
         response_emotion = response["emotion"]
