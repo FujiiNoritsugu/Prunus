@@ -1,18 +1,19 @@
+// 圧力センサのピンを指定
+const int pressureSensorPin = A0;
+
 void setup() {
-  // LEDピンを出力に設定
-  pinMode(LED_BUILTIN, OUTPUT);
+  // シリアル通信を開始
+  Serial.begin(9600);
 }
 
 void loop() {
-  // LEDを点灯
-  digitalWrite(LED_BUILTIN, HIGH);
-
-  // 1秒待つ
-  delay(1000);
-
-  // LEDを消灯
-  digitalWrite(LED_BUILTIN, LOW);
-
-  // 1秒待つ
-  delay(1000);
+  // 圧力センサからアナログ値を読み取る（0〜1023の範囲）
+  int sensorValue = analogRead(pressureSensorPin);
+  
+  // 読み取った値をシリアルモニタに表示
+  // Serial.print("Pressure Sensor Value: ");
+  Serial.println(sensorValue);
+  
+  // 0.5秒待つ
+  delay(500);
 }
