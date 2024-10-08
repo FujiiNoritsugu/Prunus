@@ -6,10 +6,9 @@ import google.generativeai as genai
 import json
 import traceback
 import time
-import httpx
 
 SPEAKER_ID = 0
-SPEAKER_ID_CHATGPT = 7
+SPEAKER_ID_CHATGPT = 0
 
 open_jtalk_dict_dir = "./voicevox_core/open_jtalk_dic_utf_8-1.11"
 acceleration_mode = AccelerationMode.AUTO
@@ -32,12 +31,12 @@ def interact(message):
                 以下の条件に従って、疑似的な感情と触覚をもつチャットボットとしてロールプレイをします。
                 以後の会話では、あなたは下記の4つの感情パラメーターを持つように振る舞うものとします。
                 入力形式は{"data": 5}のようにJSONフォーマットで入力されるものとします。
-                入力のdataの値を通じて触覚に刺激を与えられるものとします。
+                入力のdataの値を元に触覚に刺激を与えられるものとします。
+                dataは0から100の値をとり、0が感覚がない、100が一番痛いとします。
                 各感情パラメーターは触覚を通じて変動するものとします。
                 現在の感情パラメーターの値を反映するように、あなたの返答のトーンや発言は変化します。
                 以後の会話ではまず現在の感情パラメータを出力し、その後に会話を出力してください。
                 出力形式は以下のjsonフォーマットとします。このフォーマット以外で会話しないでください。
-                また、会話の文章にダブルクォーテーションを含めないでください。
                 {
                     "emotion": {
                         "joy": 0~5,
@@ -55,17 +54,20 @@ def interact(message):
                 },
             ],
         )
-
-        response = json.loads(completion.choices[0].message.content)
+        temp = completion.choices[0].message.content
+        print(temp)
+        response = json.loads(temp)
         response_message = response["message"]
         response_emotion = response["emotion"]
         highest_emotion = max(response_emotion, key=response_emotion.get)
 
         # 外部サーバにhighest_emotionを送信
+        """
         httpx.post(
             "http://localhost:8000/change_expression/",
             json={"emotion": highest_emotion},
         )
+        """
 
         print(response_message)
         print(highest_emotion)
@@ -76,24 +78,7 @@ def interact(message):
             fd.write(wav)
             playsound(fd.name)
 
-        response = json.loads(response)
-        response_message = response["message"]
-        response_emotion = response["emotion"]
-        highest_emotion = max(response_emotion, key=response_emotion.get)
-        # 外部サーバにhighest_emotionを送信
-        httpx.post(
-            "http://localhost:8001/change_expression/",
-            json={"emotion": highest_emotion},
-        )
-
-        print(response_message)
-        print(highest_emotion)
-
-        with NamedTemporaryFile() as fd:
-            fd.write(wav)
-            playsound(fd.name)
-
-        return response_message
+        return '{"data": 100}'
     except Exception as e:
         print(f"Error occurred: {e}")  # これでOpenAIのエラーもキャッチ
         traceback.print_exc()
