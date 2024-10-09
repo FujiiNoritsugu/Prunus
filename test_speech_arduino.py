@@ -5,7 +5,10 @@ from tempfile import NamedTemporaryFile
 import google.generativeai as genai
 import json
 import traceback
-import time
+from fastapi import FastAPI
+import uvicorn
+import threading
+import sys
 
 SPEAKER_ID = 0
 SPEAKER_ID_CHATGPT = 0
@@ -84,28 +87,44 @@ def interact(message):
         traceback.print_exc()
 
 
-def main():
-    # ファイルを開く
-    with open("../chat_gpt_api_key", "r") as file:
-        # ファイルからデータを読み込む
-        data = file.read().strip()
+# メイン処理
+# ファイルを開く
+with open("../chat_gpt_api_key", "r") as file:
+    # ファイルからデータを読み込む
+    data = file.read().strip()
 
-    global openai_client
-    openai_client = OpenAI(api_key=data)
+global openai_client
+openai_client = OpenAI(api_key=data)
 
-    global core_chatgpt
-    core_chatgpt = VoicevoxCore(
-        acceleration_mode=acceleration_mode, open_jtalk_dict_dir=open_jtalk_dict_dir
-    )
+global core_chatgpt
+core_chatgpt = VoicevoxCore(
+    acceleration_mode=acceleration_mode, open_jtalk_dict_dir=open_jtalk_dict_dir
+)
 
-    core_chatgpt.load_model(SPEAKER_ID_CHATGPT)
+core_chatgpt.load_model(SPEAKER_ID_CHATGPT)
 
-    message = '{"data": 5}'
+# コマンドライン引数を取得
+arguments = sys.argv
+if len(arguments) > 1:
+    port = int(arguments[1])
+else:
+    port = 8000
 
-    while True:
-        message = interact(message)
-        time.sleep(3)
+# FastAPIアプリケーションの作成
+app = FastAPI()
 
 
-if __name__ == "__main__":
-    main()
+# FastAPIを別スレッドで実行
+def run_api():
+    uvicorn.run(app, host="0.0.0.0", port=port)
+
+
+api_thread = threading.Thread(target=run_api, daemon=True)
+api_thread.start()
+
+
+# FastAPIエンドポイントを定義
+@app.get("/sensor_data/")
+def change_expression(data: int):
+    interact(data)
+    return {"status": "success"}

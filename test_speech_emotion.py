@@ -67,10 +67,6 @@ class EmotionRequest(BaseModel):
     emotion: str
 
 
-class EmotionRequest(BaseModel):
-    emotion: str
-
-
 # FastAPIエンドポイントを定義
 @app.post("/change_expression/")
 def change_expression(request: EmotionRequest):
