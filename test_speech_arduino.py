@@ -114,17 +114,12 @@ else:
 app = FastAPI()
 
 
-# FastAPIを別スレッドで実行
-def run_api():
-    uvicorn.run(app, host="0.0.0.0", port=port)
-
-
-api_thread = threading.Thread(target=run_api, daemon=True)
-api_thread.start()
-
-
 # FastAPIエンドポイントを定義
-@app.get("/sensor_data/")
-def change_expression(data: int):
+@app.get("/sensor_data")
+def get_sensor_data(data: int):
+    print(f"data:{data}")
     interact(data)
     return {"status": "success"}
+
+uvicorn.run(app, host="0.0.0.0", port=port)
+
