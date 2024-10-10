@@ -10,7 +10,7 @@ import uvicorn
 import threading
 import sys
 
-SPEAKER_ID = 0
+SPEAKER_ID = 6
 SPEAKER_ID_CHATGPT = 0
 
 open_jtalk_dict_dir = "./voicevox_core/open_jtalk_dic_utf_8-1.11"
@@ -118,7 +118,8 @@ app = FastAPI()
 @app.get("/sensor_data")
 def get_sensor_data(data: int):
     print(f"data:{data}")
-    interact(data)
+    message = json.dumps({"data":data})
+    interact(message)
     return {"status": "success"}
 
 uvicorn.run(app, host="0.0.0.0", port=port)
