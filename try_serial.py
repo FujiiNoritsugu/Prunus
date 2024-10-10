@@ -1,6 +1,7 @@
 import serial
 import time
 import httpx
+import asyncio
 
 # シリアルポートの設定
 ser = serial.Serial(
@@ -20,7 +21,21 @@ def map_to_range(value, in_min, in_max, out_min, out_max):
     return int((value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
 
 
-try:
+async def send_data(mapped_value):
+    """非同期でデータを送信する関数"""
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                "http://localhost:8000/sensor_data", params={"data": mapped_value}
+            )
+            print(f"Sent mapped data: {mapped_value}, Response: {response.status_code}")
+        except httpx.RequestError as e:
+            print(f"An error occurred while requesting: {e}")
+
+
+async def read_sensor_data():
+    """センサデータを読み取り、5秒ごとに送信する非同期関数"""
+    global sensor_data
     start_time = time.time()
     while True:
         if ser.in_waiting > 0:  # 受信データがあるか確認
@@ -42,21 +57,24 @@ try:
                 mapped_value = map_to_range(
                     average_value, sensor_min, sensor_max, 0, 100
                 )
-                # GETリクエストを送信
-                try:
-                    response = httpx.get(
-                        "http://localhost:8000/sensor_data",
-                        params={"data": mapped_value},
-                    )
-                    print(
-                        f"Sent mapped data: {mapped_value}, Response: {response.status_code}"
-                    )
-                except httpx.RequestError as e:
-                    print(f"An error occurred while requesting: {e}")
+                # 非同期でデータを送信
+                await send_data(mapped_value)
                 # センサデータのリストをリセット
                 sensor_data = []
             start_time = current_time
-except KeyboardInterrupt:
-    print("終了します。")
-finally:
-    ser.close()  # シリアルポートを閉じる
+        # 少し待ってから次のループへ
+        await asyncio.sleep(0.1)
+
+
+async def main():
+    """メイン関数"""
+    try:
+        await read_sensor_data()
+    except KeyboardInterrupt:
+        print("終了します。")
+    finally:
+        ser.close()  # シリアルポートを閉じる
+
+
+# 非同期イベントループを開始
+asyncio.run(main())
