@@ -9,11 +9,11 @@ ser = serial.Serial(
 )  # 'COM3' はArduinoが接続されているポートに変更（例: '/dev/ttyACM0'）
 
 sensor_data = []  # センサデータのリスト
-interval = 5  # データ送信の間隔（秒）
+interval = 10  # データ送信の間隔（秒）
 
 # センサデータの範囲（例として、センサの出力が0～1023の範囲と仮定）
 sensor_min = 0
-sensor_max = 1023
+sensor_max = 500
 
 
 def map_to_range(value, in_min, in_max, out_min, out_max):
