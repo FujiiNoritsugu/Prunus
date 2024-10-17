@@ -6,6 +6,8 @@ server and a device being plugged in also generate logs.
 
 import leap
 import time
+import httpx
+import asyncio
 
 
 class MyListener(leap.Listener):
@@ -21,23 +23,33 @@ class MyListener(leap.Listener):
 
         print(f"Found device {info.serial}")
 
-    def on_tracking_event(self, event):
+    async def on_tracking_event(self, event):
         print(f"Frame {event.tracking_frame_id} with {len(event.hands)} hands.")
-        for hand in event.hands:
-            if hand.grab_strength > 0.9:
-                # 手が握られているとき
-                print(f"Hand {hand.id} is grabbing.")
-                # time.sleep(0.5)  # ちょっと待って開閉を確認する
-            elif hand.grab_strength < 0.1:
-                print(f"Hand {hand.id} has opened.")
+        async with httpx.AsyncClient() as client:
+            for hand in event.hands:
+                grab_strength = hand.grab_strength
+                if grab_strength > 0.9:
+                    print(f"Hand {hand.id} is grabbing.")
+                elif grab_strength < 0.1:
+                    print(f"Hand {hand.id} has opened.")
 
-            # hand_type = "left" if str(hand.type) == "HandType.Left" else "right"
-            # print(
-            #    f"Hand id {hand.id} is a {hand_type} hand with position ({hand.palm.position.x}, {hand.palm.position.y}, {hand.palm.position.z})."
-            #)
+                # 10秒毎にgrab_strengthを送信
+                data = {"grab_strength": grab_strength}
+                try:
+                    response = await client.post(
+                        "http://localhost:8000/sensor_data", json=data
+                    )
+                    print(
+                        f"Sent grab_strength: {grab_strength}, response status: {response.status_code}"
+                    )
+                except httpx.RequestError as exc:
+                    print(f"An error occurred while requesting: {exc}")
+
+                # 10秒待機
+                await asyncio.sleep(10)
 
 
-def main():
+async def main():
     my_listener = MyListener()
 
     connection = leap.Connection()
@@ -48,8 +60,8 @@ def main():
     with connection.open():
         connection.set_tracking_mode(leap.TrackingMode.Desktop)
         while running:
-            time.sleep(1)
+            await asyncio.sleep(1)
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

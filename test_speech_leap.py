@@ -5,7 +5,7 @@ from tempfile import NamedTemporaryFile
 import google.generativeai as genai
 import json
 import traceback
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 import uvicorn
 import threading
 import sys
@@ -17,7 +17,7 @@ open_jtalk_dict_dir = "./voicevox_core/open_jtalk_dic_utf_8-1.11"
 acceleration_mode = AccelerationMode.AUTO
 
 
-async def interact(message):
+async def interact(data: str):
 
     global core_chatgpt
     global core_gemini
@@ -35,7 +35,7 @@ async def interact(message):
                 以後の会話では、あなたは下記の4つの感情パラメーターを持つように振る舞うものとします。
                 入力形式は{"data": 5}のようにJSONフォーマットで入力されるものとします。
                 入力のdataの値を元に胸に刺激を与えられるものとします。
-                dataは0から100の値をとり、0が胸を触られない、100が一番強く胸を触られるとします。
+                dataは0から1の値をとり、0が胸を触られない、1が一番強く胸を触られるとします。
                 各感情パラメーターは触覚を通じて変動するものとします。
                 現在の感情パラメーターの値を反映するように、あなたの返答のトーンや発言は変化します。
                 以後の会話ではまず現在の感情パラメータを出力し、その後に会話を出力してください。
@@ -53,7 +53,7 @@ async def interact(message):
                 },
                 {
                     "role": "user",
-                    "content": message,
+                    "content": data,
                 },
             ],
         )
@@ -114,13 +114,17 @@ else:
 app = FastAPI()
 
 
-# FastAPIエンドポイントを定義
-@app.get("/sensor_data")
-async def get_sensor_data(data: int):
-    print(f"data:{data}")
-    message = json.dumps({"data":data})
-    await interact(message)
-    return {"status": "success"}
+@app.post("/sensor_data")
+async def post_sensor_data(request: Request):
+    data = await request.json()  # JSON形式でデータを受け取る
+    grab_strength = data.get("grab_strength", None)
+
+    if grab_strength is not None:
+        print(f"Received grab_strength: {grab_strength}")
+        await interact(grab_strength)  # 送信されたデータを使って何らかの処理をする
+        return {"status": "success"}
+    else:
+        return {"status": "failed", "reason": "Invalid data"}
+
 
 uvicorn.run(app, host="0.0.0.0", port=port)
-
