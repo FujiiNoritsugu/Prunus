@@ -33,8 +33,6 @@ test_sketch/**
 voicevox_core*
 venv/
 
-requirements*
-
 onnxruntime*
 
 download.sh
