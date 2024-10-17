@@ -118,10 +118,10 @@ app = FastAPI()
 async def post_sensor_data(request: Request):
     data = await request.json()  # JSON形式でデータを受け取る
     grab_strength = data.get("grab_strength", None)
-
+    send_data = f"{grab_strength:.2f}"
     if grab_strength is not None:
         print(f"Received grab_strength: {grab_strength}")
-        await interact(grab_strength)  # 送信されたデータを使って何らかの処理をする
+        await interact(send_data)  # 送信されたデータを使って何らかの処理をする
         return {"status": "success"}
     else:
         return {"status": "failed", "reason": "Invalid data"}
