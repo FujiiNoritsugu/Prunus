@@ -13,7 +13,7 @@ interval = 10  # データ送信の間隔（秒）
 
 # センサデータの範囲（例として、センサの出力が0～1023の範囲と仮定）
 sensor_min = 0
-sensor_max = 500
+sensor_max = 1024
 
 
 def map_to_range(value, in_min, in_max, out_min, out_max):
