@@ -12,6 +12,7 @@ client = httpx.Client()
 counter = 0
 
 class MyListener(leap.Listener):
+ 
     def on_connection_event(self, event):
         print("Connected")
 
@@ -25,22 +26,18 @@ class MyListener(leap.Listener):
         print(f"Found device {info.serial}")
 
     def on_tracking_event(self, event):
+        global counter
         print(f"Frame {event.tracking_frame_id} with {len(event.hands)} hands.")
         for hand in event.hands:
             grab_strength = hand.grab_strength
-            print(f"grab_strength:{grab_strength}")
 
             # 10秒毎にgrab_strengthを送信
             data = {"grab_strength": grab_strength}
             counter += 1
             if counter > 1000:
                 try:
-                    response = client.post(
-                        "http://localhost:8000/sensor_data", json=data
-                    )
-                    print(
-                        f"Sent grab_strength: {grab_strength}, response status: {response.status_code}"
-                    )
+                  response  = client.post("http://localhost:8000/sensor_data", json=data)
+                  print(f"Sent grab_strength: {grab_strength} response:{response}")
                 except httpx.RequestError as exc:
                     print(f"An error occurred while requesting: {exc}")
                 counter = 0
