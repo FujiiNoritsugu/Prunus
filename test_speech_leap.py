@@ -9,6 +9,7 @@ from fastapi import FastAPI, Request
 import uvicorn
 import threading
 import sys
+import httpx
 
 SPEAKER_ID = 6
 SPEAKER_ID_CHATGPT = 0
@@ -35,7 +36,7 @@ async def interact(data: str):
                 以後の会話では、あなたは下記の4つの感情パラメーターを持つように振る舞うものとします。
                 入力形式は{"data": 5}のようにJSONフォーマットで入力されるものとします。
                 入力のdataの値を元に胸に刺激を与えられるものとします。
-                dataは0から1の値をとり、0が胸を触られない、0.5が胸が一番気持ち良く感じ、1が一番強く胸を触られて痛く感じるとします。
+                dataは0から1の値をとり、0が胸に何も感じない、0.5が胸が一番気持ち良くなり、1に近づくにつれて強く胸を触られて痛く感じるとします。
                 各感情パラメーターは触覚を通じて変動するものとします。
                 現在の感情パラメーターの値を反映するように、あなたの返答のトーンや発言は変化します。
                 以後の会話ではまず現在の感情パラメータを出力し、その後に会話を出力してください。
@@ -65,12 +66,11 @@ async def interact(data: str):
         highest_emotion = max(response_emotion, key=response_emotion.get)
 
         # 外部サーバにhighest_emotionを送信
-        """
+
         httpx.post(
-            "http://localhost:8000/change_expression/",
+            "http://localhost:8001/change_expression/",
             json={"emotion": highest_emotion},
         )
-        """
 
         print(response_message)
         print(highest_emotion)
