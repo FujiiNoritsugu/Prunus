@@ -18,15 +18,18 @@ sensor_max = 1024
 
 def map_to_range(value, in_min, in_max, out_min, out_max):
     """値を指定した範囲に線形変換する関数"""
-    return int((value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
+    return float((value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
 
 
 async def send_data(mapped_value):
+    # 10秒毎にgrab_strengthを送信
+    data = {"grab_strength": mapped_value}
+ 
     """非同期でデータを送信する関数"""
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.get(
-                "http://localhost:8000/sensor_data", params={"data": mapped_value}
+            response = await client.post(
+                "http://localhost:8000/sensor_data", json=data
             )
             print(f"Sent mapped data: {mapped_value}, Response: {response.status_code}")
         except httpx.RequestError as e:
@@ -53,9 +56,9 @@ async def read_sensor_data():
             if sensor_data:
                 # 平均値の計算
                 average_value = sum(sensor_data) / len(sensor_data)
-                # 0～100の範囲に変換
+                # 0～1の範囲に変換
                 mapped_value = map_to_range(
-                    average_value, sensor_min, sensor_max, 0, 100
+                    average_value, sensor_min, sensor_max, 0, 1
                 )
                 # 非同期でデータを送信
                 await send_data(mapped_value)
