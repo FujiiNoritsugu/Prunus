@@ -18,6 +18,7 @@ SPEAKER_ID_CHATGPT = 0
 
 open_jtalk_dict_dir = "./voicevox_core/open_jtalk_dic_utf_8-1.11"
 acceleration_mode = AccelerationMode.AUTO
+touched_area = "胸"
 
 
 async def play_sound_in_thread(file_path):
@@ -132,15 +133,18 @@ app = FastAPI()
 
 @app.post("/sensor_data")
 async def post_sensor_data(request: Request):
+    global touched_area
     data = await request.json()  # JSON形式でデータを受け取る
     grab_strength = data.get("grab_strength", None)
-    send_data = f"{grab_strength:.2f}"
+    touched_area = data.get("touched_area", None)
     if grab_strength is not None:
-        print(f"Received grab_strength: {grab_strength}")
-        await interact(send_data)  # 送信されたデータを使って何らかの処理をする
-        return {"status": "success"}
-    else:
-        return {"status": "failed", "reason": "Invalid data"}
+        send_data = f"{grab_strength:.2f}"
+        if grab_strength is not None:
+            print(f"Received grab_strength: {grab_strength}")
+            await interact(send_data)  # 送信されたデータを使って何らかの処理をする
+            return {"status": "success"}
+        else:
+            return {"status": "failed", "reason": "Invalid data"}
 
 
 uvicorn.run(app, host="0.0.0.0", port=port)
