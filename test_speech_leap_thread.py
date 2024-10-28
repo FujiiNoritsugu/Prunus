@@ -34,6 +34,31 @@ async def play_sound_in_thread(file_path):
         await asyncio.sleep(0.1)
 
 
+def make_system_prompt():
+    print(f"touched_area: {touched_area}")
+    content = f"""
+            以下の条件に従って、疑似的な感情と{touched_area}に触覚をもつチャットボットとしてロールプレイをします。
+            以後の会話では、あなたは下記の4つの感情パラメーターを持つように振る舞うものとします。
+            入力形式は{{"data": 5}}のようにJSONフォーマットで入力されるものとします。
+            入力のdataの値を元に{touched_area}に刺激を与えられるものとします。
+            dataは0から1の値をとり、0が{touched_area}に何も感じない、0.5が{touched_area}が一番気持ち良くなり、1に近づくにつれて強く{touched_area}を触られて痛く感じるとします。
+            各感情パラメーターは触覚を通じて変動するものとします。
+            現在の感情パラメーターの値を反映するように、あなたの返答のトーンや発言は変化します。
+            以後の会話ではまず現在の感情パラメータを出力し、その後に会話を出力してください。
+            出力形式は以下のjsonフォーマットとします。このフォーマット以外で会話しないでください。
+            {{
+                "emotion": {
+                    "joy": 0~5,
+                    "fun": 0~5,
+                    "anger": 0~5,
+                    "sad": 0~5,
+                }
+                "message": "会話の文章"
+            }}
+            """
+    return content
+
+
 async def interact(data: str):
 
     global core_chatgpt
@@ -41,32 +66,13 @@ async def interact(data: str):
     global openai_client
 
     try:
-
+        system_prompt = make_system_prompt()
         completion = openai_client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {
                     "role": "system",
-                    "content": f"""
-                以下の条件に従って、疑似的な感情と{touched_area}に触覚をもつチャットボットとしてロールプレイをします。
-                以後の会話では、あなたは下記の4つの感情パラメーターを持つように振る舞うものとします。
-                入力形式は{{"data": 5}}のようにJSONフォーマットで入力されるものとします。
-                入力のdataの値を元に{touched_area}に刺激を与えられるものとします。
-                dataは0から1の値をとり、0が{touched_area}に何も感じない、0.5が{touched_area}が一番気持ち良くなり、1に近づくにつれて強く{touched_area}を触られて痛く感じるとします。
-                各感情パラメーターは触覚を通じて変動するものとします。
-                現在の感情パラメーターの値を反映するように、あなたの返答のトーンや発言は変化します。
-                以後の会話ではまず現在の感情パラメータを出力し、その後に会話を出力してください。
-                出力形式は以下のjsonフォーマットとします。このフォーマット以外で会話しないでください。
-                {{
-                    "emotion": {
-                        "joy": 0~5,
-                        "fun": 0~5,
-                        "anger": 0~5,
-                        "sad": 0~5,
-                    }
-                    "message": "会話の文章"
-                }}
-                """,
+                    "content": system_prompt,
                 },
                 {
                     "role": "user",
