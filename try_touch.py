@@ -4,11 +4,11 @@ import httpx
 
 
 # 選択した部位を表示する関数
-async def select_body_part(part):
+def select_body_part(part):
     messagebox.showinfo("選択した部位", f"あなたが選択した部位: {part}")
     data = {"touched_area": part}
-    with httpx.AsyncClient() as client:
-        response = await client.post("http://localhost:8000/touched_area", json=data)
+    with httpx.Client() as client:
+        response = client.post("http://localhost:8000/touched_data", json=data)
         print(response)
 
 
