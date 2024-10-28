@@ -47,17 +47,17 @@ async def interact(data: str):
             messages=[
                 {
                     "role": "system",
-                    "content": """
-                以下の条件に従って、疑似的な感情と胸に触覚をもつチャットボットとしてロールプレイをします。
+                    "content": f"""
+                以下の条件に従って、疑似的な感情と{touched_area}に触覚をもつチャットボットとしてロールプレイをします。
                 以後の会話では、あなたは下記の4つの感情パラメーターを持つように振る舞うものとします。
-                入力形式は{"data": 5}のようにJSONフォーマットで入力されるものとします。
-                入力のdataの値を元に胸に刺激を与えられるものとします。
-                dataは0から1の値をとり、0が胸に何も感じない、0.5が胸が一番気持ち良くなり、1に近づくにつれて強く胸を触られて痛く感じるとします。
+                入力形式は{{"data": 5}}のようにJSONフォーマットで入力されるものとします。
+                入力のdataの値を元に{touched_area}に刺激を与えられるものとします。
+                dataは0から1の値をとり、0が{touched_area}に何も感じない、0.5が{touched_area}が一番気持ち良くなり、1に近づくにつれて強く{touched_area}を触られて痛く感じるとします。
                 各感情パラメーターは触覚を通じて変動するものとします。
                 現在の感情パラメーターの値を反映するように、あなたの返答のトーンや発言は変化します。
                 以後の会話ではまず現在の感情パラメータを出力し、その後に会話を出力してください。
                 出力形式は以下のjsonフォーマットとします。このフォーマット以外で会話しないでください。
-                {
+                {{
                     "emotion": {
                         "joy": 0~5,
                         "fun": 0~5,
@@ -65,7 +65,7 @@ async def interact(data: str):
                         "sad": 0~5,
                     }
                     "message": "会話の文章"
-                }
+                }}
                 """,
                 },
                 {
@@ -133,18 +133,27 @@ app = FastAPI()
 
 @app.post("/sensor_data")
 async def post_sensor_data(request: Request):
-    global touched_area
     data = await request.json()  # JSON形式でデータを受け取る
     grab_strength = data.get("grab_strength", None)
-    touched_area = data.get("touched_area", None)
     if grab_strength is not None:
+        print(f"Received grab_strength: {grab_strength}")
         send_data = f"{grab_strength:.2f}"
-        if grab_strength is not None:
-            print(f"Received grab_strength: {grab_strength}")
-            await interact(send_data)  # 送信されたデータを使って何らかの処理をする
-            return {"status": "success"}
-        else:
-            return {"status": "failed", "reason": "Invalid data"}
+        await interact(send_data)  # 送信されたデータを使って何らかの処理をする
+        return {"status": "success"}
+    else:
+        return {"status": "failed", "reason": "Invalid data"}
+
+
+@app.post("/touched_data")
+async def post_touched_area(request: Request):
+    global touched_area
+    data = await request.json()  # JSON形式でデータを受け取る
+    temp_data = data.get("touched_area", None)
+    if temp_data is not None:
+        touched_area = temp_data
+        return {"status": "success"}
+    else:
+        return {"status": "failed", "reason": "Invalid data"}
 
 
 uvicorn.run(app, host="0.0.0.0", port=port)
