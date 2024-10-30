@@ -41,7 +41,7 @@ def make_system_prompt():
             以後の会話では、あなたは下記の4つの感情パラメーターを持つように振る舞うものとします。
             入力形式は{"data": 5}のようにJSONフォーマットで入力されるものとします。
             入力のdataの値を元に@@に刺激を与えられるものとします。
-            dataは0から1の値をとり、0が@@に何も感じない、0.5が@@が一番気持ち良くなり、1に近づくにつれて強く@@を触られて痛く感じるとします。
+            dataは0から1の値をとり、0が@@に何も感じない、0.5に近づくにつれて@@が一番気持ち良くなり、1に近づくにつれて強く@@を触られて痛く感じるとします。
             各感情パラメーターは触覚を通じて変動するものとします。
             現在の感情パラメーターの値を反映するように、あなたの返答のトーンや発言は変化します。
             以後の会話ではまず現在の感情パラメータを出力し、その後に会話を出力してください。
@@ -90,10 +90,14 @@ async def interact(data: str):
         highest_emotion = max(response_emotion, key=response_emotion.get)
 
         # 外部サーバにhighest_emotionを送信
-
         httpx.post(
             "http://localhost:8001/change_expression/",
             json={"emotion": highest_emotion},
+        )
+        # サーボサーバにemotionを送信
+        httpx.post(
+            "http://localhost:8002/set_expression/",
+            json={"emotion": response_emotion},
         )
 
         print(response_message)

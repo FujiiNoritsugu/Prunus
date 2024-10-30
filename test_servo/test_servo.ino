@@ -2,11 +2,15 @@
 
 Servo servo1;  // サーボモーター1（眉や目の動き）
 Servo servo2;  // サーボモーター2（口の動き）
+Servo servo3;  // サーボモーター3（首の動き）
+Servo servo4;  // サーボモーター4（頭の動き）
 
 void setup() {
-  Serial.begin(9600);  // シリアル通信の初期化
-  servo1.attach(9);    // サーボモーター1をデジタルピン9に接続
-  servo2.attach(10);   // サーボモーター2をデジタルピン10に接続
+  Serial.begin(9600);   // シリアル通信の初期化
+  servo1.attach(8);     // サーボモーター1をデジタルピン8に接続
+  servo2.attach(9);     // サーボモーター2をデジタルピン9に接続
+  servo3.attach(10);    // サーボモーター3をデジタルピン10に接続
+  servo4.attach(11);    // サーボモーター4をデジタルピン11に接続
 }
 
 void loop() {

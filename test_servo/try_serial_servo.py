@@ -1,6 +1,8 @@
 from fastapi import FastAPI, HTTPException
 import serial
 import time
+import uvicorn
+import threading
 
 # FastAPIアプリケーションの作成
 app = FastAPI()
@@ -38,3 +40,12 @@ async def set_expression_api(expression: str):
 @app.on_event("shutdown")
 def shutdown_event():
     ser.close()
+
+
+# FastAPIを別スレッドで実行
+def run_api():
+    uvicorn.run(app, host="0.0.0.0", port=port)
+
+
+api_thread = threading.Thread(target=run_api, daemon=True)
+api_thread.start()
