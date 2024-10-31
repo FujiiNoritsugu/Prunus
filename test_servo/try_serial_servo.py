@@ -16,6 +16,7 @@ time.sleep(2)  # Arduino接続待機のため少し待つ
 @app.post("/set_expression/")
 async def set_expression_api(expression: str):
     try:
+        print(f"expression:{expression}")
         ser.write(f"{expression}\n".encode())  # 感情データを送信
         time.sleep(0.1)  # 送信後の待機
         response = ser.readline().decode("utf-8").strip()  # Arduinoからの応答を読み取る

@@ -97,7 +97,7 @@ async def interact(data: str):
         # サーボサーバにemotionを送信
         httpx.post(
             "http://localhost:8002/set_expression/",
-            json={"emotion": response_emotion},
+            json={"emotion": json.dumps(response_emotion)},
         )
 
         print(response_message)
