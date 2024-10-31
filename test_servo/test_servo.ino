@@ -16,24 +16,33 @@ void setup() {
 void loop() {
   if (Serial.available() > 0) {
     String input = Serial.readStringUntil('\n');  // シリアルポートからのデータを読み取る
-    if (input == "happy") {
-      // 喜びの表情
-      servo1.write(30);  // 目や眉の位置
-      servo2.write(60);  // 口の位置
-    } else if (input == "angry") {
-      // 怒りの表情
-      servo1.write(150);  // 目や眉の位置
-      servo2.write(30);   // 口の位置
-    } else if (input == "sad") {
-      // 悲しみの表情
-      servo1.write(120);  // 目や眉の位置
-      servo2.write(90);   // 口の位置
-    } else if (input == "neutral") {
-      // ニュートラルな表情
-      servo1.write(90);   // 目や眉の位置
-      servo2.write(90);   // 口の位置
+
+    // JSON形式の解析を行う
+    int joyIndex = input.indexOf("\"joy\":");
+    int funIndex = input.indexOf("\"fun\":");
+    int angerIndex = input.indexOf("\"anger\":");
+    int sadIndex = input.indexOf("\"sad\":");
+
+    if (joyIndex != -1 && funIndex != -1 && angerIndex != -1 && sadIndex != -1) {
+      int joy = input.substring(joyIndex + 6, joyIndex + 7).toInt();
+      int fun = input.substring(funIndex + 6, funIndex + 7).toInt();
+      int anger = input.substring(angerIndex + 8, angerIndex + 9).toInt();
+      int sad = input.substring(sadIndex + 6, sadIndex + 7).toInt();
+
+      // 0〜5の値に基づいてサーボモータの角度を設定
+      servo1.write(map(joy, 0, 5, 0, 180));  // joyが0〜5のとき、角度を0〜180度にマッピング
+      servo2.write(map(fun, 0, 5, 0, 180));  // funが0〜5のとき、角度を0〜180度にマッピング
+      servo3.write(map(anger, 0, 5, 0, 180));  // angerが0〜5のとき、角度を0〜180度にマッピング
+      servo4.write(map(sad, 0, 5, 0, 180));  // sadが0〜5のとき、角度を0〜180度にマッピング
+
+      Serial.print("Emotion set to - Joy: ");
+      Serial.print(joy);
+      Serial.print(", Fun: ");
+      Serial.print(fun);
+      Serial.print(", Anger: ");
+      Serial.print(anger);
+      Serial.print(", Sad: ");
+      Serial.println(sad);
     }
-    Serial.print("Expression set to: ");
-    Serial.println(input);
   }
 }
