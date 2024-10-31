@@ -3,6 +3,7 @@ import serial
 import time
 import uvicorn
 import threading
+import json
 
 # FastAPIアプリケーションの作成
 app = FastAPI()
@@ -14,10 +15,11 @@ time.sleep(2)  # Arduino接続待機のため少し待つ
 
 # 感情に基づくサーボモーターの動きを設定するAPIエンドポイント
 @app.post("/set_expression/")
-async def set_expression_api(expression: str):
+async def set_expression_api(expression: dict):
     try:
-        print(f"expression:{expression}")
-        ser.write(f"{expression}\n".encode())  # 感情データを送信
+        expression_str = json.dumps(expression)
+        print(f"expression:{expression_str}")
+        ser.write(f"{expression_str}\n".encode())  # 感情データを送信
         time.sleep(0.1)  # 送信後の待機
         response = ser.readline().decode("utf-8").strip()  # Arduinoからの応答を読み取る
         return {"message": response}
