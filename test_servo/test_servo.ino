@@ -30,10 +30,10 @@ void loop() {
       int sad = input.substring(sadIndex + 6, sadIndex + 7).toInt();
 
       // 0〜5の値に基づいてサーボモータの角度を設定
-      servo1.write(map(joy, 0, 5, 0, 180));  // joyが0〜5のとき、角度を0〜180度にマッピング
-      servo2.write(map(fun, 0, 5, 0, 180));  // funが0〜5のとき、角度を0〜180度にマッピング
-      servo3.write(map(anger, 0, 5, 0, 180));  // angerが0〜5のとき、角度を0〜180度にマッピング
-      servo4.write(map(sad, 0, 5, 0, 180));  // sadが0〜5のとき、角度を0〜180度にマッピング
+      servo1.write(map(joy, 0, 5, 0, 90));  // joyが0〜5のとき、角度を0〜180度にマッピング
+      servo2.write(map(fun, 0, 5, 0, 90));  // funが0〜5のとき、角度を0〜180度にマッピング
+      servo3.write(map(anger, 0, 5, 0, 90));  // angerが0〜5のとき、角度を0〜180度にマッピング
+      servo4.write(map(sad, 0, 5, 0, 90));  // sadが0〜5のとき、角度を0〜180度にマッピング
 
       Serial.print("Emotion set to - Joy: ");
       Serial.print(joy);
