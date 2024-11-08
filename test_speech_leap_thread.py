@@ -103,7 +103,8 @@ async def interact(data: str):
         print(response_message)
         print(highest_emotion)
 
-        audio_query = core_chatgpt.audio_query(response_message, SPEAKER_ID_CHATGPT)
+        speaker_message = response_message.split("。")[0] + "。"
+        audio_query = core_chatgpt.audio_query(speaker_message, SPEAKER_ID_CHATGPT)
         wav = core_chatgpt.synthesis(audio_query, SPEAKER_ID_CHATGPT)
 
         with NamedTemporaryFile() as fd:
