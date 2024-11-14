@@ -11,7 +11,8 @@ import threading
 import sys
 import httpx
 import asyncio
-import threading
+import re
+
 
 SPEAKER_ID = 6
 SPEAKER_ID_CHATGPT = 0
@@ -61,6 +62,21 @@ def make_system_prompt():
     return content
 
 
+def make_speaker_message(response_message):
+    # speaker_message = response_message.split("。")[0] + "。"
+    # 「。」、「！」、「？」でセンテンスを分割し、「話」が含まれないセンテンスだけを抽出
+    filtered_sentences = [
+        sentence
+        for sentence in re.split(r"(?<=[。！？])", response_message)
+        if not re.search(r"話", sentence)
+    ]
+
+    # 再度、センテンスを一つの文字列に結合
+    speaker_message = "".join(filtered_sentences)
+
+    return speaker_message
+
+
 async def interact(data: str):
 
     global core_chatgpt
@@ -103,7 +119,9 @@ async def interact(data: str):
         print(response_message)
         print(highest_emotion)
 
-        speaker_message = response_message.split("。")[0] + "。"
+        # 音声出力用のメッセージを作成
+        speaker_message = make_speaker_message(response_message)
+
         audio_query = core_chatgpt.audio_query(speaker_message, SPEAKER_ID_CHATGPT)
         wav = core_chatgpt.synthesis(audio_query, SPEAKER_ID_CHATGPT)
 
