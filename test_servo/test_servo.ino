@@ -37,10 +37,10 @@ void loop() {
 
     // 値が有効な範囲かを確認し、範囲外であれば無視
     if (joy >= 0 && joy <= 5 && fun >= 0 && fun <= 5 && anger >= 0 && anger <= 5 && sad >= 0 && sad <= 5) {
-      servo1.write(map(joy, 0, 5, 0, 90));
-      servo2.write(map(fun, 0, 5, 0, 90));
-      servo3.write(map(anger, 0, 5, 0, 90));
-      servo4.write(map(sad, 0, 5, 0, 90));
+      servo1.write(map(joy, 0, 5, 0, 180));
+      servo2.write(map(fun, 0, 5, 0, 180));
+      servo3.write(map(anger, 0, 5, 0, 180));
+      servo4.write(map(sad, 0, 5, 0, 180));
 
       Serial.print("Emotion set to - Joy: ");
       Serial.print(joy);
