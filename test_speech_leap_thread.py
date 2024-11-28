@@ -12,6 +12,8 @@ import sys
 import httpx
 import asyncio
 import re
+import sounddevice as sd
+import numpy as np
 
 
 SPEAKER_ID = 6
@@ -77,6 +79,32 @@ def make_speaker_message(response_message):
     return speaker_message
 
 
+async def speak_with_voicevox(text, speaker_id=1):
+    async with httpx.AsyncClient() as client:
+        # audio_queryエンドポイントにPOSTリクエストを送信
+        query_response = await client.post(
+            "http://localhost:50021/audio_query",
+            params={"text": text, "speaker": speaker_id}
+        )
+        query_response.raise_for_status()
+        audio_query = query_response.json()
+
+        # synthesisエンドポイントにPOSTリクエストを送信
+        synthesis_response = await client.post(
+            "http://localhost:50021/synthesis",
+            json=audio_query,
+            params={"speaker": speaker_id}
+        )
+        synthesis_response.raise_for_status()
+
+    # バイナリデータをnumpy配列に変換
+    audio_data = np.frombuffer(synthesis_response.content, dtype=np.int16)
+
+    # サンプルレートはVoiceVoxの標準値である24kHz
+    sd.play(audio_data, samplerate=24000)
+    sd.wait()
+
+
 async def interact(data: str):
 
     global core_chatgpt
@@ -111,12 +139,8 @@ async def interact(data: str):
         # 音声出力用のメッセージを作成
         speaker_message = make_speaker_message(response_message)
 
-        audio_query = core_chatgpt.audio_query(speaker_message, SPEAKER_ID_CHATGPT)
-        wav = core_chatgpt.synthesis(audio_query, SPEAKER_ID_CHATGPT)
-
-        with NamedTemporaryFile() as fd:
-            fd.write(wav)
-            await play_sound_in_thread(fd.name)  # 非同期で音声を再生
+        # 音声を出力
+        await speak_with_voicevox(speaker_message, speaker_id=SPEAKER_ID_CHATGPT)
 
         # 外部サーバにhighest_emotionを送信
         httpx.post(
