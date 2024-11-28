@@ -40,8 +40,8 @@ def make_system_prompt():
     content = """
             以下の条件に従って、疑似的な感情と@@に触覚をもつチャットボットとしてロールプレイをします。
             以後の会話では、あなたは下記の4つの感情パラメーターを持つように振る舞うものとします。
-            入力形式は{"data": 5}のようにJSONフォーマットで入力されるものとします。
-            入力のdataの値を元に@@に刺激を与えられるものとします。
+             入力のdataの値を元に@@に刺激を与えられるものとします。
+           入力形式は{"data": 5}のようにJSONフォーマットで入力されるものとします。
             dataは0から1の値をとり、0が@@に何も感じない、0.5に近づくにつれて@@が一番気持ち良くなり、1に近づくにつれて強く@@を触られて痛く感じるとします。
             各感情パラメーターは触覚を通じて変動するものとします。
             現在の感情パラメーターの値を反映するように、あなたの返答のトーンや発言は変化します。
@@ -105,17 +105,6 @@ async def interact(data: str):
         response_emotion = response["emotion"]
         highest_emotion = max(response_emotion, key=response_emotion.get)
 
-        # 外部サーバにhighest_emotionを送信
-        httpx.post(
-            "http://localhost:8001/change_expression/",
-            json={"emotion": highest_emotion},
-        )
-        # サーボサーバにemotionを送信
-        httpx.post(
-            "http://localhost:8002/set_expression/",
-            json=response_emotion,
-        )
-
         print(response_message)
         print(highest_emotion)
 
@@ -128,6 +117,17 @@ async def interact(data: str):
         with NamedTemporaryFile() as fd:
             fd.write(wav)
             await play_sound_in_thread(fd.name)  # 非同期で音声を再生
+
+        # 外部サーバにhighest_emotionを送信
+        httpx.post(
+            "http://localhost:8001/change_expression/",
+            json={"emotion": highest_emotion},
+        )
+        # サーボサーバにemotionを送信
+        httpx.post(
+            "http://localhost:8002/set_expression/",
+            json=response_emotion,
+        )
 
         return '{"data": 100}'
     except Exception as e:

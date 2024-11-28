@@ -16,7 +16,7 @@ import httpx
 import traceback
 
 SAMPLERATE = 44100
-SPEAKER_ID = 0
+SPEAKER_ID = 6
 
 open_jtalk_dict_dir = "./voicevox_core/open_jtalk_dic_utf_8-1.11"
 acceleration_mode = AccelerationMode.AUTO
