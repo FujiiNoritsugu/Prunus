@@ -80,7 +80,8 @@ def make_speaker_message(response_message):
 
 
 async def speak_with_voicevox(text, speaker_id=1):
-    async with httpx.AsyncClient() as client:
+    timeout=httpx.Timeout(connect=10.0, read=30.0, write=10.0, pool=5.0)
+    async with httpx.AsyncClient(timeout=timeout) as client:
         # audio_queryエンドポイントにPOSTリクエストを送信
         query_response = await client.post(
             "http://localhost:50021/audio_query",
