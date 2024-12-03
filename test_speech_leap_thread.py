@@ -83,6 +83,7 @@ async def speak_with_voicevox(text, speaker_id=1):
     timeout=httpx.Timeout(connect=10.0, read=30.0, write=10.0, pool=5.0)
     async with httpx.AsyncClient(timeout=timeout) as client:
         # audio_queryエンドポイントにPOSTリクエストを送信
+         # TODO ここのlocalhostをngrokのURLに書き換える
         query_response = await client.post(
             "http://localhost:50021/audio_query",
             params={"text": text, "speaker": speaker_id}
@@ -108,8 +109,6 @@ async def speak_with_voicevox(text, speaker_id=1):
 
 async def interact(data: str):
 
-    global core_chatgpt
-    global core_gemini
     global openai_client
 
     try:
@@ -168,13 +167,6 @@ with open("../chat_gpt_api_key", "r") as file:
 
 global openai_client
 openai_client = OpenAI(api_key=data)
-
-global core_chatgpt
-core_chatgpt = VoicevoxCore(
-    acceleration_mode=acceleration_mode, open_jtalk_dict_dir=open_jtalk_dict_dir
-)
-
-core_chatgpt.load_model(SPEAKER_ID_CHATGPT)
 
 # コマンドライン引数を取得
 arguments = sys.argv
