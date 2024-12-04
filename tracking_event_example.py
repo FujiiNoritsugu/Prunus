@@ -1,18 +1,14 @@
-"""Prints the palm position of each hand, every frame. When a device is 
-connected we set the tracking mode to desktop and then generate logs for 
-every tracking frame received. The events of creating a connection to the 
-server and a device being plugged in also generate logs. 
-"""
-
 import leap
-import time
+import asyncio
 import httpx
 
-client = httpx.Client()
 counter = 0
 
+
 class MyListener(leap.Listener):
- 
+    def __init__(self):
+        self.client = httpx.AsyncClient()
+
     def on_connection_event(self, event):
         print("Connected")
 
@@ -35,15 +31,25 @@ class MyListener(leap.Listener):
             data = {"grab_strength": grab_strength}
             counter += 1
             if counter > 1000:
-                try:
-                  response  = client.post("http://localhost:8000/sensor_data", json=data)
-                  print(f"Sent grab_strength: {grab_strength} response:{response}")
-                except httpx.RequestError as exc:
-                    print(f"An error occurred while requesting: {exc}")
+                asyncio.create_task(self.send_data(data))
                 counter = 0
 
+    async def send_data(self, data):
+        try:
+            response = await self.client.post(
+                "http://localhost:8000/sensor_data", json=data
+            )
+            print(
+                f"Sent grab_strength: {data['grab_strength']} response: {response.status_code}"
+            )
+        except httpx.RequestError as exc:
+            print(f"An error occurred while requesting: {exc}")
 
-def main():
+    async def close_client(self):
+        await self.client.aclose()
+
+
+async def main():
     my_listener = MyListener()
 
     connection = leap.Connection()
@@ -51,11 +57,14 @@ def main():
 
     running = True
 
-    with connection.open():
-        connection.set_tracking_mode(leap.TrackingMode.Desktop)
-        while running:
-            time.sleep(1)
+    try:
+        with connection.open():
+            connection.set_tracking_mode(leap.TrackingMode.Desktop)
+            while running:
+                await asyncio.sleep(1)
+    finally:
+        await my_listener.close_client()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
