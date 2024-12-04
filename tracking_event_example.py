@@ -1,14 +1,14 @@
 import leap
 import asyncio
-import httpx
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+import uvicorn
 
-counter = 0
+app = FastAPI()
+latest_grab_strength = {"grab_strength": None}  # 最新のgrab_strengthを保存する辞書
 
 
 class MyListener(leap.Listener):
-    def __init__(self):
-        self.client = httpx.AsyncClient()
-
     def on_connection_event(self, event):
         print("Connected")
 
@@ -22,48 +22,46 @@ class MyListener(leap.Listener):
         print(f"Found device {info.serial}")
 
     def on_tracking_event(self, event):
-        global counter
-        print(f"Frame {event.tracking_frame_id} with {len(event.hands)} hands.")
+        global latest_grab_strength
         for hand in event.hands:
             grab_strength = hand.grab_strength
-
-            # 10秒毎にgrab_strengthを送信
-            data = {"grab_strength": grab_strength}
-            counter += 1
-            if counter > 1000:
-                asyncio.create_task(self.send_data(data))
-                counter = 0
-
-    async def send_data(self, data):
-        try:
-            response = await self.client.post(
-                "http://localhost:8000/sensor_data", json=data
-            )
-            print(
-                f"Sent grab_strength: {data['grab_strength']} response: {response.status_code}"
-            )
-        except httpx.RequestError as exc:
-            print(f"An error occurred while requesting: {exc}")
-
-    async def close_client(self):
-        await self.client.aclose()
+            latest_grab_strength["grab_strength"] = grab_strength
+            print(f"Updated grab_strength: {grab_strength}")
 
 
-async def main():
+async def start_leap_motion():
     my_listener = MyListener()
-
     connection = leap.Connection()
     connection.add_listener(my_listener)
-
-    running = True
 
     try:
         with connection.open():
             connection.set_tracking_mode(leap.TrackingMode.Desktop)
-            while running:
+            while True:
                 await asyncio.sleep(1)
     finally:
-        await my_listener.close_client()
+        print("Leap Motion connection closed")
+
+
+@app.get("/get_grab_strength")
+async def get_grab_strength():
+    """最新のgrab_strengthを返すエンドポイント"""
+    if latest_grab_strength["grab_strength"] is not None:
+        return JSONResponse(content=latest_grab_strength)
+    else:
+        return JSONResponse(content={"error": "No data available"}, status_code=404)
+
+
+async def main():
+    # 並行タスクでLeap Motionのリスナーを開始
+    leap_task = asyncio.create_task(start_leap_motion())
+
+    # FastAPIのサーバーを起動
+    uvicorn_task = asyncio.create_task(
+        uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+    )
+
+    await asyncio.gather(leap_task, uvicorn_task)
 
 
 if __name__ == "__main__":
