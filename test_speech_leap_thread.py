@@ -16,11 +16,9 @@ import sounddevice as sd
 import numpy as np
 
 
-SPEAKER_ID = 6
 SPEAKER_ID_CHATGPT = 0
+FETCH_INTERVAL = 1  # 1秒ごとにリクエストを送信
 
-open_jtalk_dict_dir = "./voicevox_core/open_jtalk_dic_utf_8-1.11"
-acceleration_mode = AccelerationMode.AUTO
 touched_area = "胸"
 
 
@@ -80,13 +78,13 @@ def make_speaker_message(response_message):
 
 
 async def speak_with_voicevox(text, speaker_id=1):
-    timeout=httpx.Timeout(connect=10.0, read=30.0, write=10.0, pool=5.0)
+    timeout = httpx.Timeout(connect=10.0, read=30.0, write=10.0, pool=5.0)
     async with httpx.AsyncClient(timeout=timeout) as client:
         # audio_queryエンドポイントにPOSTリクエストを送信
-         # TODO ここのlocalhostをngrokのURLに書き換える
+        # TODO ここのlocalhostをngrokのURLに書き換える
         query_response = await client.post(
             "http://localhost:50021/audio_query",
-            params={"text": text, "speaker": speaker_id}
+            params={"text": text, "speaker": speaker_id},
         )
         query_response.raise_for_status()
         audio_query = query_response.json()
@@ -95,7 +93,7 @@ async def speak_with_voicevox(text, speaker_id=1):
         synthesis_response = await client.post(
             "http://localhost:50021/synthesis",
             json=audio_query,
-            params={"speaker": speaker_id}
+            params={"speaker": speaker_id},
         )
         synthesis_response.raise_for_status()
 
@@ -105,6 +103,25 @@ async def speak_with_voicevox(text, speaker_id=1):
     # サンプルレートはVoiceVoxの標準値である24kHz
     sd.play(audio_data, samplerate=24000)
     sd.wait()
+
+
+async def post_servo_and_emotion(highest_emotion, response_emotion):
+    """サーボサーバーにemotionを送信"""
+    async with httpx.AsyncClient() as client:
+        try:
+            # 外部サーバにhighest_emotionを送信
+            client.post(
+                "http://localhost:8001/change_expression/",
+                json={"emotion": highest_emotion},
+            )
+            # サーボサーバにemotionを送信
+            client.post(
+                "http://localhost:8002/set_expression/",
+                json=response_emotion,
+            )
+
+        except httpx.RequestError as e:
+            print(f"Error sending emotion: {e}")
 
 
 async def interact(data: str):
@@ -142,16 +159,7 @@ async def interact(data: str):
         # 音声を出力
         await speak_with_voicevox(speaker_message, speaker_id=SPEAKER_ID_CHATGPT)
 
-        # 外部サーバにhighest_emotionを送信
-        httpx.post(
-            "http://localhost:8001/change_expression/",
-            json={"emotion": highest_emotion},
-        )
-        # サーボサーバにemotionを送信
-        httpx.post(
-            "http://localhost:8002/set_expression/",
-            json=response_emotion,
-        )
+        await post_servo_and_emotion(highest_emotion, response_emotion)
 
         return '{"data": 100}'
     except Exception as e:
@@ -179,19 +187,6 @@ else:
 app = FastAPI()
 
 
-@app.post("/sensor_data")
-async def post_sensor_data(request: Request):
-    data = await request.json()  # JSON形式でデータを受け取る
-    grab_strength = data.get("grab_strength", None)
-    if grab_strength is not None:
-        print(f"Received grab_strength: {grab_strength}")
-        send_data = f"{grab_strength:.2f}"
-        await interact(send_data)  # 送信されたデータを使って何らかの処理をする
-        return {"status": "success"}
-    else:
-        return {"status": "failed", "reason": "Invalid data"}
-
-
 @app.post("/touched_data")
 async def post_touched_area(request: Request):
     global touched_area
@@ -204,4 +199,35 @@ async def post_touched_area(request: Request):
         return {"status": "failed", "reason": "Invalid data"}
 
 
-uvicorn.run(app, host="0.0.0.0", port=port)
+async def fetch_and_interact():
+    """定期的にget_grab_strengthエンドポイントからデータを取得し、処理する"""
+    async with httpx.AsyncClient() as client:
+        while True:
+            try:
+                response = await client.get("http://localhost:8000/get_grab_strength")
+                response.raise_for_status()
+                data = response.json()
+                grab_strength = data.get("grab_strength", None)
+                if grab_strength is not None:
+                    print(f"Fetched grab_strength: {grab_strength}")
+                    await interact(str(grab_strength))  # `interact`でアクションを実行
+            except httpx.RequestError as e:
+                print(f"Error fetching grab_strength: {e}")
+            await asyncio.sleep(FETCH_INTERVAL)
+
+
+async def main():
+    """メイン処理"""
+    # `fetch_and_interact`を別タスクとして起動
+    fetch_task = asyncio.create_task(fetch_and_interact())
+
+    # FastAPIサーバーの起動
+    server_task = asyncio.create_task(
+        uvicorn.run(app, host="0.0.0.0", port=8001, log_level="info")
+    )
+
+    await asyncio.gather(fetch_task, server_task)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
