@@ -58,7 +58,7 @@ async def main():
 
     # FastAPIのサーバーを起動
     uvicorn_task = asyncio.create_task(
-        uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+        uvicorn.run(app, host="0.0.0.0", port=8003, log_level="info")
     )
 
     await asyncio.gather(leap_task, uvicorn_task)

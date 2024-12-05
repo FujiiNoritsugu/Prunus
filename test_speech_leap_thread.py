@@ -204,7 +204,7 @@ async def fetch_and_interact():
     async with httpx.AsyncClient() as client:
         while True:
             try:
-                response = await client.get("http://localhost:8000/get_grab_strength")
+                response = await client.get("http://localhost:8003/get_grab_strength")
                 response.raise_for_status()
                 data = response.json()
                 grab_strength = data.get("grab_strength", None)
