@@ -3,6 +3,7 @@ import asyncio
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 import uvicorn
+from uvicorn import Config, Server
 
 app = FastAPI()
 latest_grab_strength = {"grab_strength": None}  # 最新のgrab_strengthを保存する辞書
@@ -23,6 +24,7 @@ class MyListener(leap.Listener):
 
     def on_tracking_event(self, event):
         global latest_grab_strength
+        latest_grab_strength = None
         for hand in event.hands:
             grab_strength = hand.grab_strength
             latest_grab_strength["grab_strength"] = grab_strength
@@ -51,15 +53,18 @@ async def get_grab_strength():
     else:
         return JSONResponse(content={"error": "No data available"}, status_code=404)
 
+async def start_server():
+    """FastAPIサーバーを起動"""
+    config = Config(app, host="0.0.0.0", port=8003, log_level="info")
+    server = Server(config)
+    await server.serve()
 
 async def main():
     # 並行タスクでLeap Motionのリスナーを開始
     leap_task = asyncio.create_task(start_leap_motion())
 
     # FastAPIのサーバーを起動
-    uvicorn_task = asyncio.create_task(
-        uvicorn.run(app, host="0.0.0.0", port=8003, log_level="info")
-    )
+    uvicorn_task = asyncio.create_task(start_server())
 
     await asyncio.gather(leap_task, uvicorn_task)
 
