@@ -5,7 +5,10 @@ from fastapi.responses import JSONResponse
 import uvicorn
 
 app = FastAPI()
-latest_grab_strength = {"grab_strength": None}  # 最新のgrab_strengthを保存する辞書
+latest_grab_strength = {
+    "grab_strength": None,
+    "tracking": False,
+}  # トラッキング状態を追加して管理
 
 
 class MyListener(leap.Listener):
@@ -23,10 +26,16 @@ class MyListener(leap.Listener):
 
     def on_tracking_event(self, event):
         global latest_grab_strength
-        for hand in event.hands:
-            grab_strength = hand.grab_strength
-            latest_grab_strength["grab_strength"] = grab_strength
-            print(f"Updated grab_strength: {grab_strength}")
+        if event.hands:  # 手がトラッキングされている場合
+            for hand in event.hands:
+                grab_strength = hand.grab_strength
+                latest_grab_strength["grab_strength"] = grab_strength
+                latest_grab_strength["tracking"] = True
+                print(f"Updated grab_strength: {grab_strength}")
+        else:  # トラッキングされていない場合
+            latest_grab_strength["tracking"] = False
+            latest_grab_strength["grab_strength"] = None
+            print("No hands tracked")
 
 
 async def start_leap_motion():
@@ -46,10 +55,12 @@ async def start_leap_motion():
 @app.get("/get_grab_strength")
 async def get_grab_strength():
     """最新のgrab_strengthを返すエンドポイント"""
-    if latest_grab_strength["grab_strength"] is not None:
-        return JSONResponse(content=latest_grab_strength)
+    if latest_grab_strength["tracking"]:
+        return JSONResponse(
+            content={"grab_strength": latest_grab_strength["grab_strength"]}
+        )
     else:
-        return JSONResponse(content={"error": "No data available"}, status_code=404)
+        return JSONResponse(content={"error": "No hands tracked"}, status_code=404)
 
 
 async def main():
