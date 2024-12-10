@@ -14,7 +14,7 @@ import asyncio
 import re
 import sounddevice as sd
 import numpy as np
-
+from uvicorn import Config, Server
 
 SPEAKER_ID_CHATGPT = 0
 FETCH_INTERVAL = 1  # 1秒ごとにリクエストを送信
@@ -83,7 +83,7 @@ async def speak_with_voicevox(text, speaker_id=1):
         # audio_queryエンドポイントにPOSTリクエストを送信
         # TODO ここのlocalhostをngrokのURLに書き換える
         query_response = await client.post(
-            "http://localhost:50021/audio_query",
+            "https://20e7-35-229-158-24.ngrok-free.app/audio_query",
             params={"text": text, "speaker": speaker_id},
         )
         query_response.raise_for_status()
@@ -91,7 +91,7 @@ async def speak_with_voicevox(text, speaker_id=1):
 
         # synthesisエンドポイントにPOSTリクエストを送信
         synthesis_response = await client.post(
-            "http://localhost:50021/synthesis",
+            "https://20e7-35-229-158-24.ngrok-free.app/synthesis",
             json=audio_query,
             params={"speaker": speaker_id},
         )
@@ -215,6 +215,12 @@ async def fetch_and_interact():
                 print(f"Error fetching grab_strength: {e}")
             await asyncio.sleep(FETCH_INTERVAL)
 
+async def start_server():
+    """FastAPIサーバーを起動"""
+    config = Config(app, host="0.0.0.0", port=8001, log_level="info")
+    server = Server(config)
+    await server.serve()
+
 
 async def main():
     """メイン処理"""
@@ -222,9 +228,7 @@ async def main():
     fetch_task = asyncio.create_task(fetch_and_interact())
 
     # FastAPIサーバーの起動
-    server_task = asyncio.create_task(
-        uvicorn.run(app, host="0.0.0.0", port=8001, log_level="info")
-    )
+    server_task = asyncio.create_task(start_server())
 
     await asyncio.gather(fetch_task, server_task)
 
