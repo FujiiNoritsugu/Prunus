@@ -83,7 +83,7 @@ async def speak_with_voicevox(text, speaker_id=1):
         # audio_queryエンドポイントにPOSTリクエストを送信
         # TODO ここのlocalhostをngrokのURLに書き換える
         query_response = await client.post(
-            "https://20e7-35-229-158-24.ngrok-free.app/audio_query",
+            "https://localhoost:8080/audio_query",
             params={"text": text, "speaker": speaker_id},
         )
         query_response.raise_for_status()
@@ -91,7 +91,7 @@ async def speak_with_voicevox(text, speaker_id=1):
 
         # synthesisエンドポイントにPOSTリクエストを送信
         synthesis_response = await client.post(
-            "https://20e7-35-229-158-24.ngrok-free.app/synthesis",
+            "https://localhost:8080/synthesis",
             json=audio_query,
             params={"speaker": speaker_id},
         )
@@ -110,12 +110,12 @@ async def post_servo_and_emotion(highest_emotion, response_emotion):
     async with httpx.AsyncClient() as client:
         try:
             # 外部サーバにhighest_emotionを送信
-            client.post(
+            await client.post(
                 "http://localhost:8001/change_expression/",
                 json={"emotion": highest_emotion},
             )
             # サーボサーバにemotionを送信
-            client.post(
+            await client.post(
                 "http://localhost:8002/set_expression/",
                 json=response_emotion,
             )
@@ -217,7 +217,7 @@ async def fetch_and_interact():
 
 async def start_server():
     """FastAPIサーバーを起動"""
-    config = Config(app, host="0.0.0.0", port=8001, log_level="info")
+    config = Config(app, host="0.0.0.0", port=8004, log_level="info")
     server = Server(config)
     await server.serve()
 

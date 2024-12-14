@@ -61,7 +61,10 @@ async def get_grab_strength():
             content={"grab_strength": latest_grab_strength["grab_strength"]}
         )
     else:
-        return JSONResponse(content={"error": "No hands tracked"}, status_code=404)
+        return JSONResponse(
+            content={"grab_strength": None}
+        )
+
 
 async def start_server():
     """FastAPIサーバーを起動"""
